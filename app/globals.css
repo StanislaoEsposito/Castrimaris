@@ -1,0 +1,274 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────────────────
+   SCRIPTA ANTIQUA — Design Tokens (Tailwind v4 @theme)
+   ───────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  /* ── Palette ── */
+  --color-papyrus:        #F9F8F6;   /* sfondo principale "bianco papiro" */
+  --color-papyrus-dark:   #F0EDE7;   /* variante leggermente più scura     */
+  --color-ink:            #333333;   /* testo principale antracite          */
+  --color-ink-light:      #555555;   /* testo secondario                    */
+  --color-muted:          #7a7a7a;   /* testo terziario / placeholder       */
+  --color-border:         #E0DDD8;   /* bordi e divisori                    */
+  --color-burgundy:       #722F37;   /* accento principale                  */
+  --color-burgundy-dark:  #5a2029;   /* hover profondo                      */
+  --color-burgundy-light: #9B3D47;   /* variante chiara                     */
+  --color-gold:           #C9A84C;   /* decorazioni / dettagli nobiliari    */
+  --color-gold-light:     #E8C96A;   /* highlight oro                       */
+  --color-white:          #FFFFFF;
+
+  /* ── Typography ── */
+  --font-serif: var(--font-eb-garamond), Georgia, "Times New Roman", serif;
+  --font-sans:  var(--font-lato), system-ui, -apple-system, sans-serif;
+  --font-mono:  ui-monospace, "Cascadia Code", monospace;
+
+  /* ── Sizing scale ── */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   BASE STYLES
+   ───────────────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-papyrus);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Headings — EB Garamond per i titoli ── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  color: var(--color-ink);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+/* ── Link defaults ── */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-burgundy);
+}
+
+/* ── Selection ── */
+::selection {
+  background-color: var(--color-burgundy);
+  color: var(--color-white);
+}
+
+/* ── Scrollbar minimalista ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-papyrus-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+/* ── Ornament divisore ── */
+.ornament-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--color-gold);
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  letter-spacing: 0.15em;
+}
+.ornament-divider::before,
+.ornament-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-border),
+    transparent
+  );
+}
+
+/* ── Focus ring accessibile ── */
+:focus-visible {
+  outline: 2px solid var(--color-burgundy);
+  outline-offset: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   RESPONSIVE — Pubblico
+   Regole globali per tutte le pagine pubbliche. Mobile-first.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── Hero: aspect-ratio su mobile ─────────────────────────────────────── */
+/* L'aspect-ratio mantiene sempre le proporzioni del dipinto senza deformarlo */
+.hero-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Mobile: proporzione orizzontale del dipinto (circa 16:9) */
+  aspect-ratio: 16 / 9;
+  /* Altezza minima per schermi molto stretti */
+  min-height: 260px;
+}
+
+@media (min-width: 768px) {
+  .hero-container {
+    /* Su tablet/desktop: altezza fissa con clamp */
+    aspect-ratio: auto;
+    min-height: auto;
+    height: clamp(22rem, 45vw, 36rem);
+  }
+}
+
+/* ── Spaziature sezioni pubbliche ──────────────────────────────────────── */
+.pub-section {
+  padding: 2rem 1rem;       /* mobile */
+}
+
+@media (min-width: 480px) {
+  .pub-section { padding: 2.5rem 1.25rem; }
+}
+
+@media (min-width: 768px) {
+  .pub-section { padding: 3rem 1.5rem; }
+}
+
+/* ── Archivio: griglia notai ────────────────────────────────────────────── */
+.notary-grid {
+  display: grid;
+  gap: 0.875rem;
+  /* Mobile: minimo 7.5rem per card → 2+ colonne su qualsiasi telefono */
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+}
+
+@media (min-width: 640px) {
+  .notary-grid { grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); }
+}
+
+/* ── Article row: tablet e mobile ──────────────────────────────────────── */
+.article-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  padding: 1.25rem 0;
+}
+
+/* Su schermi stretti (<480px) il link va sotto il testo */
+@media (max-width: 479px) {
+  .article-row {
+    grid-template-columns: 1fr;
+  }
+  .article-row .read-link {
+    align-self: flex-start;
+  }
+}
+
+/* ── Pagina articolo singolo: max-width e padding ──────────────────────── */
+.article-body {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.125rem 4rem;   /* mobile */
+}
+
+@media (min-width: 640px) {
+  .article-body { padding: 2.5rem 1.5rem 5rem; }
+}
+
+@media (min-width: 1024px) {
+  .article-body { padding: 3rem 1.5rem 5rem; }
+}
+
+/* ── Meta-grid (titolo + autore nel form) ──────────────────────────────── */
+@media (max-width: 540px) {
+  .meta-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Tipografia articolo ────────────────────────────────────────────────── */
+.prose-latin {
+  font-family: var(--font-serif);
+  font-size: 1rem;        /* mobile */
+  line-height: 1.9;
+  color: var(--color-ink);
+}
+
+@media (min-width: 640px) {
+  .prose-latin { font-size: 1.05rem; }
+}
+
+@media (min-width: 1024px) {
+  .prose-latin { font-size: 1.1rem; }
+}
+
+.prose-latin p      { margin: 0 0 1rem; }
+.prose-latin h2     {
+  font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+  font-weight: 600;
+  margin: 1.75rem 0 0.6rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.25rem;
+  color: var(--color-ink);
+}
+.prose-latin strong { font-weight: 700; }
+.prose-latin em     { font-style: italic; }
+.prose-latin ul     { padding-left: 1.4rem; margin: 0 0 1rem; list-style: disc; }
+.prose-latin li     { margin-bottom: 0.35rem; }
+.prose-latin img    {
+  max-width: 100%; height: auto;
+  border-radius: 4px; margin: 1.25rem 0;
+  box-shadow: 0 2px 12px rgba(51,33,33,0.12);
+}
+
+/* ── Read / CTA links ───────────────────────────────────────────────────── */
+.read-link {
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-burgundy);
+  border: 1px solid var(--color-burgundy);
+  border-radius: var(--radius-md);
+  padding: 0.4rem 0.9rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  display: inline-block;
+}
+.read-link:hover {
+  background-color: var(--color-burgundy) !important;
+  color: #fff !important;
+}
