@@ -35,6 +35,17 @@ export const metadata: Metadata = {
     "Traduzioni e studi di testi latini. Un archivio accademico di pubblicazioni filologiche e letterarie.",
   keywords: ["latino", "traduzioni", "filologia", "letteratura latina", "testi antichi"],
   authors: [{ name: "Castrimaris" }],
+  icons: {
+    icon: [
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180" },
+    ],
+  },
+  manifest: "/site.webmanifest",
   openGraph: {
     type: "website",
     siteName: "Castrimaris",
@@ -55,6 +66,7 @@ export default function RootLayout({
   return (
     <html
       lang="it"
+      data-scroll-behavior="smooth"
       className={`${ebGaramond.variable} ${lato.variable} h-full antialiased`}
       suppressHydrationWarning
     >

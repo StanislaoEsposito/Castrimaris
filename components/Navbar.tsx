@@ -80,30 +80,49 @@ export default function Navbar() {
           aria-label="Castrimaris — torna alla home"
           className="logo-link"
           style={{
-            fontFamily: "var(--font-serif, Georgia, serif)",
-            fontSize: "1.45rem",
-            fontWeight: 600,
-            color: "#333333",
-            letterSpacing: "-0.01em",
-            lineHeight: 1,
+            display: "flex",
+            alignItems: "center",
+            gap: "0.6rem",
             textDecoration: "none",
+          }}
+        >
+          {/* Foglia Aldina */}
+          <span style={{
+            fontFamily: "var(--font-serif, Georgia, serif)",
+            fontSize: "2.1rem",
+            color: "var(--color-gold, #C9A84C)",
+            lineHeight: 1,
+            marginTop: "-0.2rem",
+          }} aria-hidden="true">
+            ❧
+          </span>
+          <div style={{
             display: "flex",
             flexDirection: "column",
             gap: 0,
-          }}
-        >
-          <span>Castrimaris</span>
-          <span style={{
-            fontFamily: "var(--font-sans, system-ui, sans-serif)",
-            fontSize: "0.58rem",
-            fontWeight: 400,
-            letterSpacing: "0.2em",
-            textTransform: "uppercase",
-            color: "#888",
-            marginTop: "1px",
           }}>
-            Archivio Notarile
-          </span>
+            <span style={{
+              fontFamily: "var(--font-serif, Georgia, serif)",
+              fontSize: "1.45rem",
+              fontWeight: 600,
+              color: "#333333",
+              letterSpacing: "-0.01em",
+              lineHeight: 1,
+            }}>
+              Castrimaris
+            </span>
+            <span style={{
+              fontFamily: "var(--font-sans, system-ui, sans-serif)",
+              fontSize: "0.58rem",
+              fontWeight: 400,
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "#888",
+              marginTop: "1px",
+            }}>
+              Archivio Notarile
+            </span>
+          </div>
         </Link>
 
         {/* ── DESKTOP LINKS (hidden su mobile via Tailwind) ── */}

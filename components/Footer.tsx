@@ -33,16 +33,28 @@ export default function Footer() {
 
         {/* ── Brand — centrato su mobile, sinistra su desktop ── */}
         <div className="footer-brand">
-          <p style={{
-            fontFamily: "var(--font-serif)",
-            fontSize: "1.3rem",
-            fontWeight: 600,
-            color: "var(--color-ink)",
-            margin: "0 0 0.4rem",
-            letterSpacing: "-0.01em",
+          <div className="footer-brand-logo" style={{
+            display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem"
           }}>
-            Castrimaris
-          </p>
+            <span style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: "1.8rem",
+              color: "var(--color-gold)",
+              lineHeight: 1,
+              marginTop: "-0.15rem",
+            }} aria-hidden="true">
+              ❧
+            </span>
+            <span style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: "1.45rem",
+              fontWeight: 600,
+              color: "var(--color-ink)",
+              letterSpacing: "-0.01em",
+            }}>
+              Castrimaris
+            </span>
+          </div>
           <p className="footer-brand-desc" style={{
             fontSize: "0.8rem",
             lineHeight: 1.6,
@@ -52,13 +64,13 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* ── Griglia Navigazione + Contatti (affiancati su mobile) ── */}
+        {/* ── Griglia Navigazione + Contatti (Centrati su mobile, griglia su desktop) ── */}
         <div className="footer-cols">
 
           {/* Navigazione */}
-          <div>
+          <div className="footer-col-item hidden md:block">
             <h3 style={colHeadStyle}>Navigazione</h3>
-            <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "0.45rem" }}>
+            <ul className="footer-list">
               {[
                 { label: "Home",      href: "/" },
                 { label: "Archivio", href: "/archivio" },
@@ -75,9 +87,9 @@ export default function Footer() {
           </div>
 
           {/* Contatti */}
-          <div>
+          <div className="footer-col-item">
             <h3 style={colHeadStyle}>Contatti</h3>
-            <p style={{ fontSize: "0.8rem", margin: "0 0 0.4rem", lineHeight: 1.5 }}>
+            <p className="footer-contact-text" style={{ fontSize: "0.8rem", margin: "0 0 0.4rem", lineHeight: 1.5 }}>
               Per corrispondenza accademica:
             </p>
             <Link href="mailto:info@castrimaris.it" className="footer-email-link"
@@ -108,13 +120,6 @@ export default function Footer() {
           <span style={{ color: "var(--color-ink-light)", fontWeight: 500 }}>Castrimaris</span>
           . Tutti i diritti riservati.
         </p>
-
-        <span aria-hidden="true" className="footer-ornament" style={{
-          fontFamily: "var(--font-serif)", fontSize: "0.9rem",
-          color: "var(--color-gold)", letterSpacing: "0.3em",
-        }}>
-          ❧
-        </span>
 
         {/* Motto + link admin nella stessa riga finale */}
         <div className="footer-admin-row" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -155,12 +160,28 @@ export default function Footer() {
         .footer-brand {
           text-align: center;
         }
+        .footer-brand-logo {
+          justify-content: center;
+        }
 
-        /* Griglia 2 colonne già su mobile */
+        /* Colonne navigazione e contatti: incolonnate e centrate su mobile */
         .footer-cols {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2rem;
+        }
+        .footer-col-item {
+          text-align: center;
+        }
+        .footer-list {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.45rem;
         }
 
         /* Brand description: centrata su mobile */
@@ -183,6 +204,9 @@ export default function Footer() {
             text-align: left;
             padding-right: 2rem;
           }
+          .footer-brand-logo {
+            justify-content: flex-start;
+          }
           /* Su desktop il paragrafo si allinea a sinistra e non ha un max-width stretto */
           .footer-brand-desc {
             margin: 0;
@@ -192,6 +216,13 @@ export default function Footer() {
           /* "Unwrappiamo" footer-cols in modo che i suoi figli entrino nella grid principale */
           .footer-cols {
             display: contents;
+          }
+          /* Ripristino dell'allineamento a sinistra e naturale su desktop */
+          .footer-col-item {
+            text-align: left;
+          }
+          .footer-list {
+            align-items: flex-start;
           }
         }
 
@@ -214,8 +245,10 @@ export default function Footer() {
           color: var(--color-ink-light);
         }
         .legal-sep {
-          color: var(--color-border);
-          font-size: 0.75rem;
+          color: var(--color-gold);
+          font-size: 0.9rem;
+          font-weight: 700;
+          line-height: 1;
         }
         /* Su schermi piccoli nascondiamo il puntino per far fluire i link puri e compatti a griglia o wrap */
         @media (max-width: 480px) {
@@ -242,9 +275,6 @@ export default function Footer() {
           text-align: center;
         }
 
-        /* Nasconde l'ornamento su mobile */
-        .footer-ornament { display: none; }
-
         @media (min-width: 768px) {
           .footer-bottom {
             flex-direction: row; /* Orizzontale su desktop */
@@ -253,11 +283,9 @@ export default function Footer() {
             text-align: left;
             padding: 1rem 1.25rem;
           }
-          .footer-ornament { display: block; }
           
-          /* Bilanciamento perfetto: sx e dx occupano uguale spazio, così l'icona è 100% centrale */
+          /* Bilanciamento: sx e dx liberi agli estremi */
           .footer-copyright { flex: 1; text-align: left; }
-          .footer-ornament { flex: 0 0 auto; text-align: center; }
           .footer-admin-row { flex: 1; justify-content: flex-end; }
         }
 
