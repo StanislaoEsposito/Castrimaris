@@ -116,7 +116,7 @@ export default function SimpleEditor({
   /* Sincronizza contenuto iniziale se cambia dall'esterno */
   useEffect(() => {
     if (editor && initialContent && editor.getHTML() !== initialContent) {
-      editor.commands.setContent(initialContent, false);
+      editor.commands.setContent(initialContent, { emitUpdate: false });
     }
   }, [initialContent, editor]);
 
