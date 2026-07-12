@@ -236,13 +236,13 @@ a:hover {
 }
 
 .prose-latin p      { margin: 0 0 1rem; }
-.prose-latin h2     {
+.prose-latin h2 {
   font-size: clamp(1.1rem, 2.5vw, 1.3rem);
   font-weight: 600;
   margin: 1.75rem 0 0.6rem;
-  border-bottom: 1px solid var(--color-border);
   padding-bottom: 0.25rem;
   color: var(--color-ink);
+  border: none;
 }
 .prose-latin strong { font-weight: 700; }
 .prose-latin em     { font-style: italic; }
@@ -253,6 +253,7 @@ a:hover {
   border-radius: 4px; margin: 1.25rem 0;
   box-shadow: 0 2px 12px rgba(51,33,33,0.12);
 }
+
 
 /* ── Read / CTA links ───────────────────────────────────────────────────── */
 .read-link {

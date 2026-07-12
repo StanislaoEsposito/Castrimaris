@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
@@ -27,8 +28,90 @@ export async function generateMetadata({
 
   return {
     title: `${data.title} — Castrimaris`,
-    description: author ? `Atto notarile di ${author}. Testo originale latino e traduzione italiana.` : undefined,
+    description: author
+      ? `Atto notarile di ${author}. Testo originale latino e traduzione italiana.`
+      : undefined,
   };
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TIPI
+   ───────────────────────────────────────────────────────────────────────── */
+type ImagePosition = "top" | "left" | "right";
+
+/* ─────────────────────────────────────────────────────────────────────────
+   COMPONENTE IMMAGINE DOCUMENTO
+   ───────────────────────────────────────────────────────────────────────── */
+function DocumentImage({ src, alt }: { src: string; alt: string }) {
+  return (
+    <figure style={{ margin: 0 }}>
+      <Image
+        src={src}
+        alt={alt}
+        width={560}
+        height={420}
+        style={{
+          width: "100%",
+          height: "auto",
+          borderRadius: "6px",
+          boxShadow: "0 2px 16px rgba(51,33,33,0.14)",
+          display: "block",
+        }}
+        priority
+      />
+    </figure>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   BLOCCO TESTI (latino + italiano impilati)
+   ───────────────────────────────────────────────────────────────────────── */
+function TextBlock({
+  latinText,
+  italianTranslation,
+}: {
+  latinText: string | null;
+  italianTranslation: string | null;
+}) {
+  return (
+    <div>
+      {/* Testo Latino */}
+      {latinText && (
+        <section style={{ marginBottom: "3rem" }}>
+          <h2 style={sectionLabelStyle}>Testo Latino Originale</h2>
+          <div
+            className="prose-latin"
+            dangerouslySetInnerHTML={{ __html: latinText }}
+          />
+        </section>
+      )}
+
+      {/* Traduzione Italiana */}
+      {italianTranslation && (
+        <section style={{ marginBottom: "3rem" }}>
+          <div aria-hidden="true" style={{
+            display: "flex", alignItems: "center",
+            gap: "0.75rem", marginBottom: "2rem",
+          }}>
+            <span style={{ flex: 1, height: 1, backgroundColor: "var(--color-border)" }} />
+            <span style={{
+              fontFamily: "var(--font-sans)", fontSize: "0.6rem", fontWeight: 700,
+              letterSpacing: "0.15em", textTransform: "uppercase",
+              color: "var(--color-muted)", whiteSpace: "nowrap",
+            }}>
+              Traduzione
+            </span>
+            <span style={{ flex: 1, height: 1, backgroundColor: "var(--color-border)" }} />
+          </div>
+          <h2 style={sectionLabelStyle}>Traduzione Italiana</h2>
+          <div
+            className="prose-latin"
+            dangerouslySetInnerHTML={{ __html: italianTranslation }}
+          />
+        </section>
+      )}
+    </div>
+  );
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -59,31 +142,30 @@ export default async function ArticolePage({
     day: "2-digit", month: "long", year: "numeric",
   });
 
+  const imageUrl      = (translation as { image_url?: string }).image_url ?? null;
+  const imagePosition = ((translation as { image_position?: string }).image_position ?? "top") as ImagePosition;
+
   return (
     <>
-      {/* ── Articolo ── */}
       <article className="article-body">
 
-        {/* Breadcrumb */}
+        {/* ── Breadcrumb ── */}
         <nav aria-label="Breadcrumb" style={{ marginBottom: "2rem" }}>
           <p style={{
             fontFamily: "var(--font-sans)", fontSize: "0.75rem",
             color: "var(--color-muted)", display: "flex",
             alignItems: "center", gap: "0.35rem", margin: 0,
           }}>
-            <Link href="/" style={{ color: "var(--color-muted)", textDecoration: "none" }}
-              className="bc-link">Home</Link>
+            <Link href="/" style={{ color: "var(--color-muted)", textDecoration: "none" }} className="bc-link">Home</Link>
             <span aria-hidden="true">›</span>
-            <Link href="/archivio" style={{ color: "var(--color-muted)", textDecoration: "none" }}
-              className="bc-link">Archivio</Link>
+            <Link href="/archivio" style={{ color: "var(--color-muted)", textDecoration: "none" }} className="bc-link">Archivio</Link>
             <span aria-hidden="true">›</span>
             <span style={{ color: "var(--color-ink-light)" }}>{translation.title}</span>
           </p>
         </nav>
 
-        {/* ── Intestazione documento ── */}
+        {/* ── Intestazione ── */}
         <header style={{ marginBottom: "3rem", textAlign: "center" }}>
-          {/* Etichetta */}
           <p style={{
             fontFamily: "var(--font-sans)", fontSize: "0.65rem", fontWeight: 700,
             letterSpacing: "0.25em", textTransform: "uppercase",
@@ -91,8 +173,6 @@ export default async function ArticolePage({
           }}>
             Protocollo Notarile · Archivio di Stato di Napoli
           </p>
-
-          {/* Titolo */}
           <h1 style={{
             fontFamily: "var(--font-serif)",
             fontSize: "clamp(1.875rem, 4vw, 2.5rem)",
@@ -102,8 +182,6 @@ export default async function ArticolePage({
           }}>
             {translation.title}
           </h1>
-
-          {/* Meta: autore + data */}
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "center",
             gap: "1rem", flexWrap: "wrap",
@@ -120,8 +198,6 @@ export default async function ArticolePage({
             <span aria-hidden="true" style={{ color: "var(--color-border)" }}>·</span>
             <time dateTime={translation.created_at}>{publishDate}</time>
           </div>
-
-          {/* Divisore ornamentale */}
           <div aria-hidden="true" style={{
             display: "flex", alignItems: "center", justifyContent: "center",
             gap: "0.75rem", marginTop: "2rem",
@@ -132,56 +208,59 @@ export default async function ArticolePage({
           </div>
         </header>
 
-        {/* ── Testo Latino ── */}
-        {translation.latin_text && (
-          <section style={{ marginBottom: "3rem" }}>
-            <h2 style={{
-              fontFamily: "var(--font-sans)", fontSize: "0.65rem", fontWeight: 700,
-              letterSpacing: "0.2em", textTransform: "uppercase",
-              color: "var(--color-muted)", marginBottom: "1.25rem",
-              paddingBottom: "0.5rem", borderBottom: "1px solid var(--color-border)",
-            }}>
-              Testo Latino Originale
-            </h2>
-            <div
-              className="prose-latin"
-              dangerouslySetInnerHTML={{ __html: translation.latin_text }}
-            />
-          </section>
+        {/* ─────────────────────────────────────────────────────────────────
+            LAYOUT DINAMICO — 3 varianti basate su image_position
+            ───────────────────────────────────────────────────────────────── */}
+
+        {/* Variante: NESSUNA IMMAGINE — solo testo */}
+        {!imageUrl && (
+          <TextBlock
+            latinText={translation.latin_text}
+            italianTranslation={translation.italian_translation}
+          />
         )}
 
-        {/* ── Traduzione Italiana ── */}
-        {translation.italian_translation && (
-          <section style={{ marginBottom: "3rem" }}>
-            {/* Separatore tra i due testi */}
-            <div aria-hidden="true" style={{
-              display: "flex", alignItems: "center", gap: "0.75rem",
-              marginBottom: "2rem",
-            }}>
-              <span style={{ flex: 1, height: 1, backgroundColor: "var(--color-border)" }} />
-              <span style={{
-                fontFamily: "var(--font-sans)", fontSize: "0.6rem", fontWeight: 700,
-                letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-muted)",
-                whiteSpace: "nowrap",
-              }}>
-                Traduzione
-              </span>
-              <span style={{ flex: 1, height: 1, backgroundColor: "var(--color-border)" }} />
+        {/* Variante: IMMAGINE SOPRA */}
+        {imageUrl && imagePosition === "top" && (
+          <div>
+            <div style={{ marginBottom: "2.5rem", maxWidth: "560px", margin: "0 auto 2.5rem" }}>
+              <DocumentImage src={imageUrl} alt={`Documento: ${translation.title}`} />
             </div>
-
-            <h2 style={{
-              fontFamily: "var(--font-sans)", fontSize: "0.65rem", fontWeight: 700,
-              letterSpacing: "0.2em", textTransform: "uppercase",
-              color: "var(--color-muted)", marginBottom: "1.25rem",
-              paddingBottom: "0.5rem", borderBottom: "1px solid var(--color-border)",
-            }}>
-              Traduzione Italiana
-            </h2>
-            <div
-              className="prose-latin"
-              dangerouslySetInnerHTML={{ __html: translation.italian_translation }}
+            <TextBlock
+              latinText={translation.latin_text}
+              italianTranslation={translation.italian_translation}
             />
-          </section>
+          </div>
+        )}
+
+        {/* Variante: IMMAGINE A SINISTRA */}
+        {imageUrl && imagePosition === "left" && (
+          <div className="doc-layout-left">
+            <div className="doc-image-col">
+              <DocumentImage src={imageUrl} alt={`Documento: ${translation.title}`} />
+            </div>
+            <div className="doc-text-col">
+              <TextBlock
+                latinText={translation.latin_text}
+                italianTranslation={translation.italian_translation}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Variante: IMMAGINE A DESTRA */}
+        {imageUrl && imagePosition === "right" && (
+          <div className="doc-layout-right">
+            <div className="doc-text-col">
+              <TextBlock
+                latinText={translation.latin_text}
+                italianTranslation={translation.italian_translation}
+              />
+            </div>
+            <div className="doc-image-col">
+              <DocumentImage src={imageUrl} alt={`Documento: ${translation.title}`} />
+            </div>
+          </div>
         )}
 
         {/* ── Navigazione inferiore ── */}
@@ -198,7 +277,6 @@ export default async function ArticolePage({
           }} className="bc-link">
             ← Torna all&apos;Archivio
           </Link>
-
           {authorName && (
             <Link
               href={`/archivio?notaio=${(translation as { author_id: string }).author_id}`}
@@ -217,9 +295,44 @@ export default async function ArticolePage({
       </article>
 
       <style>{`
-        .bc-link:hover   { color: var(--color-burgundy) !important; }
+        /* Layout a due colonne (sinistra o destra) */
+        .doc-layout-left,
+        .doc-layout-right {
+          display: grid;
+          grid-template-columns: 380px 1fr;
+          gap: 3rem;
+          align-items: start;
+        }
+        .doc-layout-right {
+          grid-template-columns: 1fr 380px;
+        }
+        /* Immagine: sticky per restare visibile durante lo scroll del testo lungo */
+        .doc-image-col {
+          position: sticky;
+          top: 6rem; /* Aumentato per non collidere con la navbar fissa */
+        }
+        /* Mobile: sempre colonna singola, immagine sopra */
+        @media (max-width: 768px) {
+          .doc-layout-left,
+          .doc-layout-right {
+            grid-template-columns: 1fr !important;
+          }
+          .doc-image-col {
+            position: static;
+            order: -1;
+          }
+        }
+        .bc-link:hover    { color: var(--color-burgundy) !important; }
         .author-link:hover { color: var(--color-burgundy) !important; }
       `}</style>
     </>
   );
 }
+
+/* ── Stile etichetta sezione ── */
+const sectionLabelStyle: React.CSSProperties = {
+  fontFamily: "var(--font-sans)", fontSize: "0.65rem", fontWeight: 700,
+  letterSpacing: "0.2em", textTransform: "uppercase",
+  color: "var(--color-muted)", marginBottom: "1.25rem",
+  paddingBottom: "0.5rem", borderBottom: "1px solid var(--color-border)",
+};

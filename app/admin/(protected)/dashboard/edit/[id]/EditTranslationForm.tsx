@@ -3,6 +3,7 @@
 import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import Link from "next/link";
 import {
   updateTranslationAction,
@@ -10,7 +11,6 @@ import {
   type EditState,
 } from "./actions";
 
-/* Carica Tiptap solo lato client */
 const SimpleEditor = dynamic(
   () => import("@/components/admin/SimpleEditor"),
   { ssr: false, loading: () => <EditorSkeleton /> }
@@ -30,7 +30,7 @@ function EditorSkeleton() {
   );
 }
 
-/* ── Bottoni submit con stato pending ── */
+/* ── Bottoni submit ── */
 function FormActions() {
   const { pending } = useFormStatus();
   return (
@@ -45,7 +45,6 @@ function FormActions() {
         }} className="draft-btn">
         {pending ? "Salvataggio…" : "Salva come Bozza"}
       </button>
-
       <button type="submit" name="action" value="publish" disabled={pending}
         style={{
           fontFamily: "var(--font-sans)", fontSize: "0.875rem", fontWeight: 700,
@@ -71,6 +70,212 @@ function FormActions() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   SEZIONE IMMAGINE — con preview dell'immagine corrente e possibilità di
+   sostituzione + cambio posizione
+   ───────────────────────────────────────────────────────────────────────── */
+function ImageSection({
+  currentImageUrl,
+  currentPosition,
+}: {
+  currentImageUrl: string | null;
+  currentPosition: "top" | "left" | "right";
+}) {
+  const [preview, setPreview] = useState<string | null>(currentImageUrl);
+  const [position, setPosition] = useState<"top" | "left" | "right">(currentPosition);
+  const [replacing, setReplacing] = useState(false);
+
+  /* ── Drag & Drop States ── */
+  const [isDragOver, setIsDragOver] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && inputRef.current) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      inputRef.current.files = dt.files;
+      setPreview(URL.createObjectURL(file));
+    }
+  };
+
+  return (
+    <div style={cardStyle}>
+      <h2 style={sectionHeadStyle}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        Immagine del Documento
+      </h2>
+
+      {/* Campo nascosto per preservare l'URL corrente (la action lo legge se non arriva un nuovo file) */}
+      <input type="hidden" name="keep_existing_image" value={currentImageUrl ?? ""} />
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", alignItems: "start" }}
+           className="img-section-grid">
+
+        {/* Upload / Preview */}
+        <div>
+          {currentImageUrl && !replacing ? (
+            <>
+              <p style={labelStyle}>Immagine attuale</p>
+              <div style={{ marginTop: "0.5rem" }}>
+                <Image
+                  src={currentImageUrl}
+                  alt="Immagine documento attuale"
+                  width={240}
+                  height={180}
+                  style={{
+                    width: "100%", maxWidth: "240px",
+                    height: "auto", borderRadius: "6px",
+                    border: "1px solid #e2e8f0", objectFit: "cover",
+                  }}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => { setReplacing(true); setPreview(null); }}
+                style={{
+                  marginTop: "0.6rem",
+                  fontFamily: "var(--font-sans)", fontSize: "0.78rem",
+                  color: "#722F37", background: "none", border: "none",
+                  cursor: "pointer", textDecoration: "underline", padding: 0,
+                }}
+              >
+                Sostituisci immagine
+              </button>
+            </>
+          ) : (
+            <>
+              <label style={labelStyle}>
+                {currentImageUrl ? "Nuova immagine (sostituirà quella attuale)" : "Carica immagine (JPG, PNG, WebP — max 8 MB)"}
+              </label>
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => inputRef.current?.click()}
+                style={{
+                  marginTop: "0.5rem",
+                  border: `2px dashed ${isDragOver ? "#722F37" : "#cbd5e1"}`,
+                  backgroundColor: isDragOver ? "rgba(114,47,55,0.05)" : "#f8fafc",
+                  borderRadius: "8px",
+                  padding: "2rem 1rem",
+                  textAlign: "center",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isDragOver ? "#722F37" : "#94a3b8"}
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: "0 auto 0.5rem", display: "block" }}>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <span style={{ fontFamily: "var(--font-sans)", fontSize: "0.85rem", color: isDragOver ? "#722F37" : "#64748b", fontWeight: 500 }}>
+                  Trascina qui l'immagine o clicca per caricare
+                </span>
+                <input
+                  id="image_file"
+                  name="image_file"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleFile}
+                  ref={inputRef}
+                  style={{ display: "none" }}
+                />
+              </div>
+              {currentImageUrl && (
+                <button
+                  type="button"
+                  onClick={() => { setReplacing(false); setPreview(currentImageUrl); }}
+                  style={{
+                    marginTop: "0.4rem",
+                    fontFamily: "var(--font-sans)", fontSize: "0.78rem",
+                    color: "#64748b", background: "none", border: "none",
+                    cursor: "pointer", textDecoration: "underline", padding: 0,
+                  }}
+                >
+                  ← Mantieni immagine attuale
+                </button>
+              )}
+              {preview && (
+                <div style={{ marginTop: "0.75rem" }}>
+                  <p style={{ ...labelStyle, marginBottom: "0.4rem" }}>Anteprima nuova immagine</p>
+                  <Image
+                    src={preview}
+                    alt="Anteprima nuova immagine"
+                    width={240}
+                    height={180}
+                    style={{
+                      width: "100%", maxWidth: "240px",
+                      height: "auto", borderRadius: "6px",
+                      border: "1px solid #e2e8f0", objectFit: "cover",
+                    }}
+                    unoptimized={preview.startsWith("blob:")}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Posizione */}
+        <div>
+          <p style={labelStyle}>Posizione Immagine</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginTop: "0.5rem" }}>
+            {(["top", "left", "right"] as const).map((pos) => {
+              const labels = { top: "Sopra il testo", left: "A Sinistra del testo", right: "A Destra del testo" };
+              const icons  = { top: "⬆", left: "⬅", right: "➡" };
+              return (
+                <label key={pos} style={{
+                  display: "flex", alignItems: "center", gap: "0.5rem",
+                  fontFamily: "var(--font-sans)", fontSize: "0.85rem",
+                  color: position === pos ? "#722F37" : "#475569",
+                  cursor: "pointer",
+                }}>
+                  <input
+                    type="radio"
+                    name="image_position"
+                    value={pos}
+                    checked={position === pos}
+                    onChange={() => setPosition(pos)}
+                    style={{ accentColor: "#722F37" }}
+                  />
+                  <span>{icons[pos]}</span>
+                  <span>{labels[pos]}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    EDIT FORM — Client Component
    ───────────────────────────────────────────────────────────────────────── */
 interface EditTranslationFormProps {
@@ -79,6 +284,8 @@ interface EditTranslationFormProps {
   initialAuthorName: string;
   initialLatinText: string;
   initialItalianTranslation: string;
+  initialImageUrl: string | null;
+  initialImagePosition: "top" | "left" | "right";
 }
 
 export default function EditTranslationForm({
@@ -87,6 +294,8 @@ export default function EditTranslationForm({
   initialAuthorName,
   initialLatinText,
   initialItalianTranslation,
+  initialImageUrl,
+  initialImagePosition,
 }: EditTranslationFormProps) {
   const initState: EditState = {
     error: null,
@@ -97,15 +306,12 @@ export default function EditTranslationForm({
 
   const latinRef   = useRef<HTMLInputElement>(null);
   const italianRef = useRef<HTMLInputElement>(null);
-
-  /* Conferma eliminazione */
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const errorMsg = updateState.error ?? deleteState.error;
 
   return (
     <>
-      {/* ── Errore globale ── */}
       {errorMsg && (
         <div role="alert" style={{
           display: "flex", alignItems: "center", gap: "0.5rem",
@@ -125,9 +331,7 @@ export default function EditTranslationForm({
         </div>
       )}
 
-      {/* ════ FORM AGGIORNAMENTO ════ */}
       <form action={updateAction}>
-        {/* Campi nascosti */}
         <input type="hidden" name="id"           value={id} />
         <input type="hidden" name="latin_text"   ref={latinRef}   defaultValue={initialLatinText} />
         <input type="hidden" name="italian_text" ref={italianRef} defaultValue={initialItalianTranslation} />
@@ -137,21 +341,15 @@ export default function EditTranslationForm({
           <h2 style={sectionHeadStyle}>Informazioni</h2>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}
                className="meta-grid">
-
-            {/* Titolo */}
             <div style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
               <label htmlFor="title" style={labelStyle}>Titolo *</label>
               <input id="title" name="title" type="text" required
-                placeholder="es. De Bello Gallico, Libro I"
                 defaultValue={updateState.fields?.title ?? initialTitle}
                 style={inputStyle} className="form-input" />
             </div>
-
-            {/* Autore */}
             <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
               <label htmlFor="author_name" style={labelStyle}>Autore / Notaio *</label>
               <input id="author_name" name="author_name" type="text" required
-                placeholder="es. Cicerone, Giovanni Notaio…"
                 defaultValue={updateState.fields?.author_name ?? initialAuthorName}
                 style={inputStyle} className="form-input" />
               <span style={{ fontFamily: "var(--font-sans)", fontSize: "0.7rem", color: "#94a3b8", fontStyle: "italic" }}>
@@ -160,6 +358,12 @@ export default function EditTranslationForm({
             </div>
           </div>
         </div>
+
+        {/* ── Immagine ── */}
+        <ImageSection
+          currentImageUrl={initialImageUrl}
+          currentPosition={initialImagePosition}
+        />
 
         {/* ── Testo Latino ── */}
         <div style={sectionStyle}>
@@ -205,16 +409,13 @@ export default function EditTranslationForm({
         </div>
       </form>
 
-      {/* ════ ZONA ELIMINAZIONE ════ */}
+      {/* ── Zona eliminazione ── */}
       <div style={{
         marginTop: "2rem", padding: "1.25rem 1.75rem",
         border: "1px solid #fecaca", borderRadius: "12px",
         backgroundColor: "#fff5f5",
       }}>
-        <p style={{
-          fontFamily: "var(--font-sans)", fontSize: "0.83rem",
-          color: "#64748b", margin: "0 0 0.75rem",
-        }}>
+        <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.83rem", color: "#64748b", margin: "0 0 0.75rem" }}>
           <strong style={{ color: "#991b1b" }}>Zona pericolosa</strong>
           {" "}— l&apos;eliminazione è irreversibile.
         </p>
@@ -289,6 +490,7 @@ export default function EditTranslationForm({
         }
         @media (max-width: 640px) {
           .meta-grid { grid-template-columns: 1fr !important; }
+          .img-section-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </>
@@ -310,9 +512,7 @@ const cardStyle: React.CSSProperties = {
   backgroundColor: "#fff", border: "1px solid #e2e8f0",
   borderRadius: "12px", padding: "1.75rem", marginBottom: "1.5rem",
 };
-const sectionStyle: React.CSSProperties = {
-  ...cardStyle,
-};
+const sectionStyle: React.CSSProperties = { ...cardStyle };
 const sectionHeadStyle: React.CSSProperties = {
   fontFamily: "var(--font-sans)", fontSize: "0.7rem", fontWeight: 700,
   letterSpacing: "0.12em", textTransform: "uppercase",

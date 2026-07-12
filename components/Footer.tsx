@@ -88,15 +88,28 @@ export default function Footer() {
         </div>
       </div>
 
+      {/* ── Link Legali ── */}
+      <div className="footer-legal">
+        <div className="legal-links-wrapper" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", columnGap: "0.8rem", rowGap: "0.5rem" }}>
+          <Link href="/privacy" className="footer-legal-link">Privacy Policy</Link>
+          <span className="legal-sep" aria-hidden="true">·</span>
+          <Link href="/cookies" className="footer-legal-link">Cookie Policy</Link>
+          <span className="legal-sep" aria-hidden="true">·</span>
+          <Link href="/accessibilita" className="footer-legal-link">Accessibilità</Link>
+          <span className="legal-sep" aria-hidden="true">·</span>
+          <Link href="/note-legali" className="footer-legal-link">Note Legali</Link>
+        </div>
+      </div>
+
       {/* ── Bottom bar ── */}
       <div className="footer-bottom">
-        <p style={{ margin: 0 }}>
+        <p className="footer-copyright" style={{ margin: 0 }}>
           © {currentYear}{" "}
           <span style={{ color: "var(--color-ink-light)", fontWeight: 500 }}>Castrimaris</span>
           . Tutti i diritti riservati.
         </p>
 
-        <span aria-hidden="true" style={{
+        <span aria-hidden="true" className="footer-ornament" style={{
           fontFamily: "var(--font-serif)", fontSize: "0.9rem",
           color: "var(--color-gold)", letterSpacing: "0.3em",
         }}>
@@ -104,7 +117,7 @@ export default function Footer() {
         </span>
 
         {/* Motto + link admin nella stessa riga finale */}
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+        <div className="footer-admin-row" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <em style={{ fontStyle: "italic", fontSize: "0.72rem" }}>«Littera scripta manet.»</em>
           <Link
             href="/admin"
@@ -157,27 +170,60 @@ export default function Footer() {
           text-align: center;
         }
 
-        /* ── Desktop: tutto su una riga ── */
+        /* ── Desktop: Layout a Griglia (Senza toccare Mobile) ── */
         @media (min-width: 768px) {
           .footer-body {
-            flex-direction: row;
-            align-items: flex-start;
-            justify-content: space-between;
-            padding: 2.75rem 1.5rem 2rem;
-            gap: 3rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr; /* Colonna Brand più larga, Nav e Contatti affiancati */
+            gap: 2rem;
+            padding: 3rem 1.5rem 2.5rem;
+            align-items: start;
           }
           .footer-brand {
             text-align: left;
-            flex: 1;
+            padding-right: 2rem;
           }
-          /* Su desktop il paragrafo si allinea a sinistra col titolo */
+          /* Su desktop il paragrafo si allinea a sinistra e non ha un max-width stretto */
           .footer-brand-desc {
             margin: 0;
-            max-width: 28ch;
+            max-width: none;
+            text-align: left;
           }
+          /* "Unwrappiamo" footer-cols in modo che i suoi figli entrino nella grid principale */
           .footer-cols {
-            flex: 1;
-            gap: 2rem;
+            display: contents;
+          }
+        }
+
+        /* ── Link Legali ── */
+        .footer-legal {
+          border-top: 1px solid var(--color-border);
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 1rem 1.25rem;
+          text-align: center;
+        }
+        .footer-legal-link {
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          color: var(--color-muted);
+          text-decoration: none;
+          transition: color 0.2s ease;
+        }
+        .footer-legal-link:hover {
+          color: var(--color-ink-light);
+        }
+        .legal-sep {
+          color: var(--color-border);
+          font-size: 0.75rem;
+        }
+        /* Su schermi piccoli nascondiamo il puntino per far fluire i link puri e compatti a griglia o wrap */
+        @media (max-width: 480px) {
+          .legal-sep { display: none; }
+        }
+        @media (min-width: 768px) {
+          .legal-links-wrapper {
+            column-gap: 2rem !important; /* Molto ariosi su desktop (come gap-8) */
           }
         }
 
@@ -186,19 +232,33 @@ export default function Footer() {
           border-top: 1px solid var(--color-border);
           max-width: 1200px;
           margin: 0 auto;
-          padding: 0.875rem 1.25rem;
+          padding: 1.25rem;
           display: flex;
-          flex-wrap: wrap;
+          flex-direction: column; /* Impilato su mobile */
           align-items: center;
-          justify-content: space-between;
-          gap: 0.5rem;
+          gap: 1rem;
           font-size: 0.72rem;
           color: var(--color-muted);
+          text-align: center;
         }
 
-        /* Nasconde l'ornamento su schermi molto stretti */
-        @media (max-width: 400px) {
-          .footer-bottom span[aria-hidden="true"] { display: none; }
+        /* Nasconde l'ornamento su mobile */
+        .footer-ornament { display: none; }
+
+        @media (min-width: 768px) {
+          .footer-bottom {
+            flex-direction: row; /* Orizzontale su desktop */
+            justify-content: space-between;
+            gap: 1rem;
+            text-align: left;
+            padding: 1rem 1.25rem;
+          }
+          .footer-ornament { display: block; }
+          
+          /* Bilanciamento perfetto: sx e dx occupano uguale spazio, così l'icona è 100% centrale */
+          .footer-copyright { flex: 1; text-align: left; }
+          .footer-ornament { flex: 0 0 auto; text-align: center; }
+          .footer-admin-row { flex: 1; justify-content: flex-end; }
         }
 
         /* ── Hover link ── */

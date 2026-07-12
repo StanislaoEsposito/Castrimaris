@@ -84,6 +84,8 @@ export default async function EditPage({
         initialAuthorName={authorName}
         initialLatinText={translation.latin_text ?? ""}
         initialItalianTranslation={translation.italian_translation ?? ""}
+        initialImageUrl={(translation as { image_url?: string }).image_url ?? null}
+        initialImagePosition={((translation as { image_position?: string }).image_position ?? "top") as "top" | "left" | "right"}
       />
 
       <style>{`

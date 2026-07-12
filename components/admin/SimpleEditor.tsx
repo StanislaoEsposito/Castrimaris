@@ -2,16 +2,24 @@
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
-import { useEffect, useRef, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { useEffect } from "react";
 
 /* ─────────────────────────────────────────────────────────────────────────
-   TOOLBAR BUTTON — riutilizzabile
+   TIPI
    ───────────────────────────────────────────────────────────────────────── */
-function ToolbarButton({
+interface SimpleEditorProps {
+  initialContent?: string;
+  onUpdate: (html: string) => void;
+  placeholder?: string;
+  minHeight?: string;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TOOLBAR BUTTON
+   ───────────────────────────────────────────────────────────────────────── */
+function ToolbarBtn({
   onClick,
-  active,
+  active = false,
   title,
   children,
 }: {
@@ -31,39 +39,43 @@ function ToolbarButton({
         justifyContent: "center",
         minWidth: "2rem",
         height: "2rem",
-        padding: "0 0.4rem",
+        padding: "0 0.5rem",
         border: "1px solid",
         borderColor: active ? "#722F37" : "#e2e8f0",
         borderRadius: "4px",
-        backgroundColor: active ? "rgba(114,47,55,0.08)" : "transparent",
+        backgroundColor: active ? "rgba(114,47,55,0.10)" : "transparent",
         color: active ? "#722F37" : "#475569",
         cursor: "pointer",
         fontSize: "0.8rem",
         fontWeight: active ? 700 : 400,
         fontFamily: "var(--font-sans)",
         transition: "all 0.15s ease",
+        flexShrink: 0,
       }}
-      className="toolbar-btn"
     >
       {children}
     </button>
   );
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   SIMPLE EDITOR — Client Component
-   Props:
-     initialContent  → HTML iniziale (per editing futuro)
-     onUpdate        → callback chiamata ogni volta che il contenuto cambia
-     placeholder     → testo segnaposto
-   ───────────────────────────────────────────────────────────────────────── */
-interface SimpleEditorProps {
-  initialContent?: string;
-  onUpdate: (html: string) => void;
-  placeholder?: string;
-  minHeight?: string;
+function Sep() {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        display: "inline-block",
+        width: 1,
+        height: "1.2rem",
+        backgroundColor: "#e2e8f0",
+        flexShrink: 0,
+      }}
+    />
+  );
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   SIMPLE EDITOR — Solo testo, nessuna immagine
+   ───────────────────────────────────────────────────────────────────────── */
 export default function SimpleEditor({
   initialContent = "",
   onUpdate,
@@ -71,29 +83,27 @@ export default function SimpleEditor({
   minHeight = "16rem",
 }: SimpleEditorProps) {
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
-        // Disabilita elementi che non usiamo
         blockquote: false,
         codeBlock: false,
-        horizontalRule: false,
-        strike: false,
         code: false,
+        strike: false,
+        heading: { levels: [2, 3, 4] },
       }),
-      Image.configure({ inline: false }),
     ],
     content: initialContent,
     editorProps: {
       attributes: {
-        // Stile del documento — identico al frontend pubblico
         style: [
-          `font-family: var(--font-serif)`,
-          `font-size: 1.05rem`,
-          `line-height: 1.85`,
-          `color: var(--color-ink)`,
+          "font-family: var(--font-serif)",
+          "font-size: 1.05rem",
+          "line-height: 1.85",
+          "color: var(--color-ink)",
           `min-height: ${minHeight}`,
-          `padding: 1.25rem`,
-          `outline: none`,
+          "padding: 1.25rem",
+          "outline: none",
         ].join(";"),
         "data-placeholder": placeholder,
       },
@@ -103,70 +113,24 @@ export default function SimpleEditor({
     },
   });
 
-  // Sincronizza il contenuto iniziale se cambia dall'esterno
+  /* Sincronizza contenuto iniziale se cambia dall'esterno */
   useEffect(() => {
     if (editor && initialContent && editor.getHTML() !== initialContent) {
-      editor.commands.setContent(initialContent, { emitUpdate: false });
+      editor.commands.setContent(initialContent, false);
     }
   }, [initialContent, editor]);
 
-  /* ── Hook dichiarati PRIMA di qualsiasi return condizionale ── */
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-
   if (!editor) return null;
 
-  /* Apre il selettore file nativo */
-  const handleImageInsert = () => {
-    fileInputRef.current?.click();
-  };
-
-  /* Upload su Supabase Storage → inserimento nell'editor */
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !editor) return;
-
-    // Resetta l'input così lo stesso file può essere selezionato di nuovo
-    e.target.value = "";
-
-    // Validazione MIME e dimensione (max 8 MB)
-    if (!file.type.startsWith("image/")) {
-      alert("Seleziona un file immagine valido (JPG, PNG, WebP, GIF…).");
-      return;
-    }
-    if (file.size > 8 * 1024 * 1024) {
-      alert("Il file supera il limite di 8 MB.");
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const supabase  = createClient();
-      const ext       = file.name.split(".").pop() ?? "jpg";
-      const fileName  = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const filePath  = `editor/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("media")
-        .upload(filePath, file, { cacheControl: "3600", upsert: false });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("media")
-        .getPublicUrl(filePath);
-
-      editor.chain().focus().setImage({ src: urlData.publicUrl }).run();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Errore sconosciuto";
-      alert(`Upload fallito: ${message}`);
-    } finally {
-      setUploading(false);
-    }
-  };
+  /* Valore corrente del selettore formato */
+  const headingValue =
+    editor.isActive("heading", { level: 2 }) ? "h2" :
+    editor.isActive("heading", { level: 3 }) ? "h3" :
+    editor.isActive("heading", { level: 4 }) ? "h4" : "p";
 
   return (
     <div
+      className="editor-wrapper"
       style={{
         border: "1px solid #e2e8f0",
         borderRadius: "8px",
@@ -174,7 +138,6 @@ export default function SimpleEditor({
         backgroundColor: "#fff",
         transition: "border-color 0.2s ease",
       }}
-      className="editor-wrapper"
     >
       {/* ── Toolbar ── */}
       <div
@@ -189,167 +152,105 @@ export default function SimpleEditor({
         }}
       >
         {/* Grassetto */}
-        <ToolbarButton
+        <ToolbarBtn
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive("bold")}
           title="Grassetto (Ctrl+B)"
         >
           <strong>B</strong>
-        </ToolbarButton>
+        </ToolbarBtn>
 
         {/* Corsivo */}
-        <ToolbarButton
+        <ToolbarBtn
           onClick={() => editor.chain().focus().toggleItalic().run()}
           active={editor.isActive("italic")}
           title="Corsivo (Ctrl+I)"
         >
           <em>I</em>
-        </ToolbarButton>
+        </ToolbarBtn>
 
-        {/* Separatore */}
-        <span
-          aria-hidden="true"
-          style={{ width: 1, height: "1.25rem", backgroundColor: "#e2e8f0" }}
-        />
+        <Sep />
 
-        {/* H2 */}
-        <ToolbarButton
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 2 }).run()
-          }
-          active={editor.isActive("heading", { level: 2 })}
-          title="Sottotitolo (H2)"
+        {/* Formato testo */}
+        <select
+          value={headingValue}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v === "p") {
+              editor.chain().focus().setParagraph().run();
+            } else {
+              const level = parseInt(v.replace("h", "")) as 2 | 3 | 4;
+              editor.chain().focus().toggleHeading({ level }).run();
+            }
+          }}
+          style={{
+            padding: "0.2rem 0.5rem",
+            fontSize: "0.8rem",
+            borderRadius: "4px",
+            border: "1px solid #e2e8f0",
+            backgroundColor: "transparent",
+            cursor: "pointer",
+            fontFamily: "var(--font-sans)",
+            color: "#475569",
+            outline: "none",
+          }}
+          title="Formato testo"
         >
-          H2
-        </ToolbarButton>
+          <option value="p">Paragrafo</option>
+          <option value="h2">Titolo 2 (Grande)</option>
+          <option value="h3">Titolo 3 (Medio)</option>
+          <option value="h4">Titolo 4 (Piccolo)</option>
+        </select>
 
-        {/* Paragrafo normale */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setParagraph().run()}
-          active={editor.isActive("paragraph")}
-          title="Paragrafo normale"
+        <Sep />
+
+        {/* Linea orizzontale */}
+        <ToolbarBtn
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          title="Linea divisoria"
         >
-          ¶
-        </ToolbarButton>
-
-        {/* Separatore */}
-        <span
-          aria-hidden="true"
-          style={{ width: 1, height: "1.25rem", backgroundColor: "#e2e8f0" }}
-        />
+          ―
+        </ToolbarBtn>
 
         {/* Lista puntata */}
-        <ToolbarButton
+        <ToolbarBtn
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           active={editor.isActive("bulletList")}
           title="Lista puntata"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/>
-            <line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor"/>
-            <circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/>
+            <line x1="9" y1="18" x2="20" y2="18"/>
+            <circle cx="4" cy="6" r="1" fill="currentColor"/>
+            <circle cx="4" cy="12" r="1" fill="currentColor"/>
+            <circle cx="4" cy="18" r="1" fill="currentColor"/>
           </svg>
-        </ToolbarButton>
+        </ToolbarBtn>
+      </div>
 
-        {/* Separatore */}
-        <span
-          aria-hidden="true"
-          style={{ width: 1, height: "1.25rem", backgroundColor: "#e2e8f0" }}
-        />
-
-        {/* Immagine — upload reale su Supabase Storage */}
-        <ToolbarButton
-          onClick={handleImageInsert}
-          title={uploading ? "Caricamento in corso…" : "Inserisci immagine"}
-          active={uploading}
-        >
-          {uploading ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-              aria-hidden="true"
-              style={{ animation: "spin 0.8s linear infinite" }}>
-              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-            </svg>
-          ) : (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-              <circle cx="8.5" cy="8.5" r="1.5"/>
-              <polyline points="21 15 16 10 5 21"/>
-            </svg>
-          )}
-        </ToolbarButton>
-
-        {/* Input file nascosto */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          disabled={uploading}
-          style={{ display: "none" }}
-          aria-hidden="true"
-        />
-
-      </div>{/* ── fine toolbar ── */}
-
-      {/* ── Area di scrittura ── */}
+      {/* ── Area scrittura ── */}
       <EditorContent editor={editor} />
 
-      {/* ── Stili globali dell'editor ── */}
+      {/* ── Stili editor ── */}
       <style>{`
-        /* Placeholder */
         .tiptap p.is-editor-empty:first-child::before {
           content: attr(data-placeholder);
-          float: left;
-          color: #94a3b8;
-          pointer-events: none;
-          height: 0;
-          font-style: italic;
-          font-family: var(--font-serif);
+          float: left; color: #94a3b8;
+          pointer-events: none; height: 0;
+          font-style: italic; font-family: var(--font-serif);
         }
-        /* H2 nell'editor */
-        .tiptap h2 {
-          font-family: var(--font-serif);
-          font-size: 1.35rem;
-          font-weight: 600;
-          color: var(--color-ink);
-          margin: 1.25rem 0 0.5rem;
-          border-bottom: 1px solid var(--color-border);
-          padding-bottom: 0.25rem;
-        }
-        /* Paragrafi */
-        .tiptap p { margin: 0 0 0.75rem; }
-        /* Bold + Italic */
+        .tiptap h2 { font-family: var(--font-serif); font-size: 1.35rem; font-weight: 700; color: var(--color-ink); margin: 1.5rem 0 0.6rem; border: none; }
+        .tiptap h3 { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--color-ink); margin: 1.25rem 0 0.5rem; }
+        .tiptap h4 { font-family: var(--font-serif); font-size: 1rem; font-weight: 600; color: var(--color-ink); margin: 1rem 0 0.4rem; }
+        .tiptap p  { margin: 0 0 0.75rem; }
         .tiptap strong { font-weight: 700; }
         .tiptap em { font-style: italic; }
-        /* Lista */
-        .tiptap ul {
-          padding-left: 1.5rem;
-          margin: 0 0 0.75rem;
-          list-style: disc;
-        }
-        /* Focus wrapper */
+        .tiptap ul { padding-left: 1.5rem; margin: 0 0 0.75rem; list-style: disc; }
+        .tiptap hr { border: none; border-top: 1px solid var(--color-border, #e2e8f0); margin: 1.5rem 0; }
         .editor-wrapper:focus-within {
           border-color: #722F37 !important;
           box-shadow: 0 0 0 3px rgba(114, 47, 55, 0.10);
-        }
-        /* Toolbar hover */
-        .toolbar-btn:hover {
-          border-color: #722F37 !important;
-          color: #722F37 !important;
-        }
-        /* Immagini nell'editor */
-        .tiptap img {
-          max-width: 100%;
-          height: auto;
-          border-radius: 4px;
-          margin: 0.5rem 0;
-        }
-        /* Spinner upload */
-        @keyframes spin {
-          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>

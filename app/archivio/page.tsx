@@ -60,13 +60,19 @@ export default async function ArchivioPage({
   const { notaio: selectedAuthorId } = await searchParams;
   const supabase = await createClient();
 
-  /* Query autori */
+  /* Query autori con almeno una traduzione pubblicata */
   const { data: authorsRaw } = await supabase
     .from("authors")
-    .select("id, name, notary_symbol_url")
+    .select("id, name, notary_symbol_url, translations!inner(id)")
+    .eq("translations.is_published", true)
     .order("name");
 
-  const authors: Author[] = authorsRaw ?? [];
+  // Formattiamo per aderire al tipo Author
+  const authors: Author[] = (authorsRaw ?? []).map((a: any) => ({
+    id: a.id,
+    name: a.name,
+    notary_symbol_url: a.notary_symbol_url,
+  }));
 
   /* Query traduzioni (filtrate per autore se selezionato) */
   let translations: Translation[] = [];
