@@ -361,17 +361,6 @@ export default function IndizioneClient() {
                 ⚠ {result.error}
               </p>
             )}
-            <p
-              style={{
-                fontFamily: "var(--font-sans)",
-                fontSize: "0.73rem",
-                color: "#94a3b8",
-                marginTop: "0.4rem",
-                fontStyle: "italic",
-              }}
-            >
-              Digita solo i numeri — gli slash vengono inseriti automaticamente. Es: <strong>25121422</strong> → 25/12/1422
-            </p>
           </div>
 
           {/* Risultati — layout flex che si impila su mobile */}
@@ -457,6 +446,43 @@ export default function IndizioneClient() {
           padding: "2rem 1.25rem 4rem",
         }}
       >
+        {/* Blocco introduttivo */}
+        <div
+          style={{
+            maxWidth: "48rem",
+            margin: "0 auto 2rem",
+            padding: "1.5rem 1.75rem",
+            backgroundColor: "#fff",
+            border: "1px solid var(--color-border)",
+            borderLeft: "3px solid var(--color-gold)",
+            borderRadius: "8px",
+            boxShadow: "0 1px 8px rgba(51,33,33,0.05)",
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: "1rem",
+              lineHeight: 1.85,
+              color: "#374151",
+              margin: 0,
+              textAlign: "justify",
+              hyphens: "auto",
+            }}
+            lang="it"
+          >
+            L&apos;Indizione è un ciclo cronologico di 15 anni ampiamente
+            utilizzato nei documenti storici. Nel Regno di Napoli era in uso
+            l&apos;Indizione Greco-Bizantina, in cui il nuovo anno indizionale
+            iniziava il <strong>1° settembre</strong>. Per utilizzare il tabulato
+            manuale: individuate la colonna dei secoli (in alto a destra) e
+            incrociatela con l&apos;anno specifico. Tenete sempre presente che i
+            documenti redatti tra il <strong>1° settembre</strong> e il{" "}
+            <strong>31 dicembre</strong> riportano già l&apos;indizione
+            dell&apos;anno solare successivo.
+          </p>
+        </div>
+
         <h2
           id="table-heading"
           style={{
