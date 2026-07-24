@@ -478,7 +478,7 @@ export default function IndizioneClient() {
             manuale: individuate la colonna dei secoli (in alto a destra) e
             incrociatela con l&apos;anno specifico. Tenete sempre presente che i
             documenti redatti tra il <strong>1° settembre</strong> e il{" "}
-            <strong>31 dicembre</strong> riportano già l&apos;indizione
+            <strong>31 dicembre </strong> riportano già l&apos;indizione
             dell&apos;anno solare successivo.
           </p>
         </div>
