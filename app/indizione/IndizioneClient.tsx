@@ -121,6 +121,22 @@ const MAIN_COLS = [0, 15, 30, 45, 60, 75, 90];
 export default function IndizioneClient() {
   const [input, setInput] = useState("");
 
+  /* ── Auto-formattazione: inserisce gli slash automaticamente ── */
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Estrai solo le cifre, ignora tutto il resto (slash compresi)
+    let digits = e.target.value.replace(/\D/g, "");
+    // Limita a 8 cifre (GGMMAAAA)
+    if (digits.length > 8) digits = digits.slice(0, 8);
+    // Reinserisce gli slash nelle posizioni corrette
+    let value = digits;
+    if (digits.length > 4) {
+      value = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+    } else if (digits.length > 2) {
+      value = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    }
+    setInput(value);
+  };
+
   const result = useMemo(() => {
     if (!input.trim()) return null;
     return computeIndizioni(input);
@@ -290,9 +306,10 @@ export default function IndizioneClient() {
                 id="date-input"
                 type="text"
                 inputMode="numeric"
-                placeholder="es. 25/12/1422"
+                maxLength={10}
+                placeholder="es. 25121422"
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={handleDateChange}
                 style={{
                   flex: "1 1 180px",
                   fontFamily: "var(--font-serif)",
@@ -304,7 +321,7 @@ export default function IndizioneClient() {
                   padding: "0.65rem 1rem",
                   outline: "none",
                   transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-                  letterSpacing: "0.04em",
+                  letterSpacing: "0.06em",
                 }}
                 className="indizione-input"
                 aria-describedby={result?.error ? "date-error" : undefined}
@@ -353,7 +370,7 @@ export default function IndizioneClient() {
                 fontStyle: "italic",
               }}
             >
-              Inserisci giorno, mese e anno nel formato numerico (es. 03/09/1350)
+              Digita solo i numeri — gli slash vengono inseriti automaticamente. Es: <strong>25121422</strong> → 25/12/1422
             </p>
           </div>
 
