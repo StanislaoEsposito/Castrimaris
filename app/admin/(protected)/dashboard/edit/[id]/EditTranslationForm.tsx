@@ -70,8 +70,7 @@ function FormActions() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   SEZIONE IMMAGINE — con preview dell'immagine corrente e possibilità di
-   sostituzione + cambio posizione
+   SEZIONE IMMAGINE — preview, sostituzione, rimozione, cambio posizione
    ───────────────────────────────────────────────────────────────────────── */
 function ImageSection({
   currentImageUrl,
@@ -83,6 +82,8 @@ function ImageSection({
   const [preview, setPreview] = useState<string | null>(currentImageUrl);
   const [position, setPosition] = useState<"top" | "left" | "right">(currentPosition);
   const [replacing, setReplacing] = useState(false);
+  /* Traccia se l'utente ha rimosso esplicitamente la copertina */
+  const [removed, setRemoved] = useState(false);
 
   /* ── Drag & Drop States ── */
   const [isDragOver, setIsDragOver] = useState(false);
@@ -93,6 +94,7 @@ function ImageSection({
     if (!file) return;
     const url = URL.createObjectURL(file);
     setPreview(url);
+    setRemoved(false);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -114,8 +116,27 @@ function ImageSection({
       dt.items.add(file);
       inputRef.current.files = dt.files;
       setPreview(URL.createObjectURL(file));
+      setRemoved(false);
     }
   };
+
+  /* ── Rimozione copertina ── */
+  const handleRemove = () => {
+    setPreview(null);
+    setRemoved(true);
+    setReplacing(false);
+    /* Reset dell'input file in modo da poter ricaricare lo stesso file in seguito */
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  /* ── Ripristino dopo rimozione accidentale ── */
+  const handleUndoRemove = () => {
+    setRemoved(false);
+    setPreview(currentImageUrl);
+  };
+
+  /* Valore del campo hidden: stringa vuota se rimosso, URL originale altrimenti */
+  const keepImageValue = removed ? "" : (currentImageUrl ?? "");
 
   return (
     <div style={cardStyle}>
@@ -129,18 +150,64 @@ function ImageSection({
         Immagine del Documento
       </h2>
 
-      {/* Campo nascosto per preservare l'URL corrente (la action lo legge se non arriva un nuovo file) */}
-      <input type="hidden" name="keep_existing_image" value={currentImageUrl ?? ""} />
+      {/* Campo hidden: vuoto = rimuovi dal DB; URL = mantieni quello corrente */}
+      <input type="hidden" name="keep_existing_image" value={keepImageValue} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", alignItems: "start" }}
            className="img-section-grid">
 
         {/* Upload / Preview */}
         <div>
-          {currentImageUrl && !replacing ? (
+
+          {/* ── Stato: rimossa ── */}
+          {removed ? (
+            <div style={{
+              padding: "1rem",
+              border: "1px dashed #fca5a5",
+              borderRadius: "8px",
+              backgroundColor: "#fff5f5",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              gap: "0.5rem",
+            }}>
+              <span style={{
+                fontFamily: "var(--font-sans)", fontSize: "0.82rem",
+                color: "#991b1b", fontWeight: 500,
+                display: "flex", alignItems: "center", gap: "0.35rem",
+              }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  aria-hidden="true">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+                Copertina rimossa
+              </span>
+              <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.75rem", color: "#64748b", margin: 0 }}>
+                Salvando, la copertina verrà eliminata dal database.
+              </p>
+              <button
+                type="button"
+                onClick={handleUndoRemove}
+                style={{
+                  fontFamily: "var(--font-sans)", fontSize: "0.78rem", fontWeight: 500,
+                  color: "#475569", background: "none",
+                  border: "1px solid #cbd5e1", borderRadius: "5px",
+                  padding: "0.3rem 0.7rem", cursor: "pointer",
+                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                }}
+              >
+                ↩ Annulla rimozione
+              </button>
+            </div>
+
+          ) : currentImageUrl && !replacing ? (
+            /* ── Stato: immagine attuale ── */
             <>
               <p style={labelStyle}>Immagine attuale</p>
-              <div style={{ marginTop: "0.5rem" }}>
+              <div style={{ marginTop: "0.5rem", position: "relative", display: "inline-block" }}>
                 <Image
                   src={currentImageUrl}
                   alt="Immagine documento attuale"
@@ -150,23 +217,55 @@ function ImageSection({
                     width: "100%", maxWidth: "240px",
                     height: "auto", borderRadius: "6px",
                     border: "1px solid #e2e8f0", objectFit: "cover",
+                    display: "block",
                   }}
                 />
               </div>
-              <button
-                type="button"
-                onClick={() => { setReplacing(true); setPreview(null); }}
-                style={{
-                  marginTop: "0.6rem",
-                  fontFamily: "var(--font-sans)", fontSize: "0.78rem",
-                  color: "#722F37", background: "none", border: "none",
-                  cursor: "pointer", textDecoration: "underline", padding: 0,
-                }}
-              >
-                Sostituisci immagine
-              </button>
+
+              {/* Azioni sotto l'immagine */}
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.65rem", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => { setReplacing(true); setPreview(null); }}
+                  style={{
+                    fontFamily: "var(--font-sans)", fontSize: "0.78rem",
+                    color: "#722F37", background: "none", border: "none",
+                    cursor: "pointer", textDecoration: "underline", padding: 0,
+                  }}
+                >
+                  Sostituisci
+                </button>
+
+                {/* Separatore */}
+                <span aria-hidden="true" style={{ color: "#cbd5e1", fontSize: "0.9rem" }}>|</span>
+
+                {/* Pulsante rimozione */}
+                <button
+                  type="button"
+                  onClick={handleRemove}
+                  className="remove-cover-btn"
+                  style={{
+                    fontFamily: "var(--font-sans)", fontSize: "0.78rem", fontWeight: 600,
+                    color: "#dc2626", background: "none", border: "none",
+                    cursor: "pointer", padding: 0,
+                    display: "inline-flex", alignItems: "center", gap: "0.25rem",
+                    transition: "color 0.15s ease",
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                    aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  </svg>
+                  Rimuovi copertina
+                </button>
+              </div>
             </>
+
           ) : (
+            /* ── Stato: upload nuovo file ── */
             <>
               <label style={labelStyle}>
                 {currentImageUrl ? "Nuova immagine (sostituirà quella attuale)" : "Carica immagine (JPG, PNG, WebP — max 8 MB)"}
@@ -194,7 +293,7 @@ function ImageSection({
                   <line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
                 <span style={{ fontFamily: "var(--font-sans)", fontSize: "0.85rem", color: isDragOver ? "#722F37" : "#64748b", fontWeight: 500 }}>
-                  Trascina qui l'immagine o clicca per caricare
+                  Trascina qui l&apos;immagine o clicca per caricare
                 </span>
                 <input
                   id="image_file"
@@ -487,6 +586,9 @@ export default function EditTranslationForm({
         .delete-btn:hover {
           background-color: #fef2f2 !important;
           border-color: #f87171 !important;
+        }
+        .remove-cover-btn:hover {
+          color: #b91c1c !important;
         }
         @media (max-width: 640px) {
           .meta-grid { grid-template-columns: 1fr !important; }
