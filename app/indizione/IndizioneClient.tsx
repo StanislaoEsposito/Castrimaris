@@ -375,7 +375,6 @@ export default function IndizioneClient() {
             {/* Box 1: Senza stile natività */}
             <ResultBox
               label="Senza Stile della Natività"
-              sublabel="Anno iniziante il 1° settembre"
               value={result?.base != null ? toRoman(result.base) : null}
               numValue={result?.base ?? null}
               accent="burgundy"
@@ -383,7 +382,6 @@ export default function IndizioneClient() {
             {/* Box 2: Secondo stile natività */}
             <ResultBox
               label="Secondo lo Stile della Natività"
-              sublabel="Anno iniziante il 25 dicembre"
               value={result?.nativita != null ? toRoman(result.nativita) : null}
               numValue={result?.nativita ?? null}
               accent="gold"
@@ -419,11 +417,7 @@ export default function IndizioneClient() {
               lineHeight: 1.6,
             }}
           >
-            <strong>Come si usa:</strong> L&apos;indizione è un ciclo di 15 anni usato
-            nella datazione medievale. Per documenti del Regno di Napoli anteriori
-            al 1582, è preferibile il metodo <em>Greco-Bizantino</em>. Lo{" "}
-            <em>Stile della Natività</em> sposta l&apos;inizio anno al 25 dicembre:
-            per date tra il 25 dic. e il 31 dic. i due valori possono differire.
+            <strong>Come si usa:</strong> per il calcolo dell&apos;indizione greco-bizantina in uso nei documenti del Regno di Napoli inserire semplicemente i valori numerici della data. In tutti i giorni dell&apos;anno le due indizioni coincidono ad eccezione dei giorni dal 25 al 31 dicembre per i quali l&apos;indizione è funzione dello stile della natività. Ad esempio: la data del 25/12/1422 restituisce l&apos;indizione I se non vige lo stile della natività e XV se vige tale stile giacchè, in quest&apos;ultimo caso, la data reale è il 25/12/1421.
           </p>
         </div>
       </section>
@@ -471,15 +465,9 @@ export default function IndizioneClient() {
             }}
             lang="it"
           >
-            L&apos;Indizione è un ciclo cronologico di 15 anni ampiamente
-            utilizzato nei documenti storici. Nel Regno di Napoli era in uso
-            l&apos;Indizione Greco-Bizantina, in cui il nuovo anno indizionale
-            iniziava il <strong>1° settembre</strong>. Per utilizzare il tabulato
-            manuale: individuate la colonna dei secoli (in alto a destra) e
-            incrociatela con l&apos;anno specifico. Tenete sempre presente che i
-            documenti redatti tra il <strong>1° settembre</strong> e il{" "}
-            <strong>31 dicembre </strong> riportano già l&apos;indizione
-            dell&apos;anno solare successivo.
+            L&apos;Indizione è, com&apos;è noto, un ciclo cronologico di 15 anni di carattere iterativo (che ripartiva cioè dal primo dopo il quindicesimo) utilizzato nei documenti pubblici e privati. Nel Regno di Napoli era ampiamente in uso l&apos;Indizione Greco-Bizantina in virtù della quale il nuovo anno indizionale iniziava il <strong>1° settembre</strong> per terminare il 31 agosto dell&apos;anno successivo. Ne consegue che in tale area, in ciascun anno solare, cadevano due differenti indizioni, una nei primi otto mesi dell&apos;anno e l&apos;altra nei successivi quattro mesi. Per evitare errori di calcolo, oltre al metodo analitico di cui sopra, abbiamo approntato il seguente tabulato manuale per il cui utilizzo si proceda nel modo seguente: individuate la colonna dei secoli (in alto a destra) e incrociatela con l&apos;anno specifico (indicato con le sole due cifre) delle colonne a sinistra tenendo rigorosamente presente il mese di riferimento.
+            <br /><br />
+            Ad esempio per calcolare l&apos;indizione alla data del 1 settembre 1554 si incroci la prima colonna in alto a destra (nella quale compare il secolo 1500) con la 10a riga a sinistra (nella quale compare l&apos;anno 55). L&apos;anno 55 è suddiviso a sua volta in due sottorighi il secondo dei quali, trattandosi del mese di settembre, intercetta la XIV indizione nella prima colonna a destra. Se si fosse trattato del 31 agosto del medesimo anno il primo rigo avrebbe intercettato a destra la XIII indizione.
           </p>
         </div>
 
@@ -870,13 +858,11 @@ export default function IndizioneClient() {
    ───────────────────────────────────────────────────────────────────────── */
 function ResultBox({
   label,
-  sublabel,
   value,
   numValue,
   accent,
 }: {
   label: string;
-  sublabel: string;
   value: string | null;
   numValue: number | null;
   accent: "burgundy" | "gold";
@@ -910,17 +896,6 @@ function ResultBox({
         }}
       >
         {label}
-      </p>
-      <p
-        style={{
-          fontFamily: "var(--font-sans)",
-          fontSize: "0.65rem",
-          color: "#94a3b8",
-          fontStyle: "italic",
-          margin: "0 0 0.9rem",
-        }}
-      >
-        {sublabel}
       </p>
 
       {value ? (

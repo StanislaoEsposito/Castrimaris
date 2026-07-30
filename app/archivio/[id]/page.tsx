@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import ZoomableContent from "@/components/ZoomableContent";
 
 /* ─────────────────────────────────────────────────────────────────────────
    METADATA DINAMICA
@@ -79,9 +80,9 @@ function TextBlock({
       {latinText && (
         <section style={{ marginBottom: "3rem" }}>
           <h2 style={sectionLabelStyle}>Testo Latino Originale</h2>
-          <div
+          <ZoomableContent
             className="prose-latin"
-            dangerouslySetInnerHTML={{ __html: latinText }}
+            html={latinText}
           />
         </section>
       )}
@@ -104,9 +105,9 @@ function TextBlock({
             <span style={{ flex: 1, height: 1, backgroundColor: "var(--color-border)" }} />
           </div>
           <h2 style={sectionLabelStyle}>Traduzione Italiana</h2>
-          <div
+          <ZoomableContent
             className="prose-latin"
-            dangerouslySetInnerHTML={{ __html: italianTranslation }}
+            html={italianTranslation}
           />
         </section>
       )}

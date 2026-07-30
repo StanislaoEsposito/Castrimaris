@@ -3,6 +3,7 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Image as TiptapImage } from "@tiptap/extension-image";
+import Superscript from "@tiptap/extension-superscript";
 import { useEffect, useRef, useState, useCallback } from "react";
 import imageCompression from "browser-image-compression";
 import { createClient } from "@/utils/supabase/client";
@@ -183,6 +184,7 @@ export default function SimpleEditor({
         heading: { levels: [2, 3, 4] },
       }),
       ArticleImage,
+      Superscript,
     ],
     content: initialContent,
     editorProps: {
@@ -398,6 +400,17 @@ export default function SimpleEditor({
 
         <Sep />
 
+        {/* Apice (Superscript) */}
+        <ToolbarBtn
+          onClick={() => editor.chain().focus().toggleSuperscript().run()}
+          active={editor.isActive("superscript")}
+          title="Apice (Superscript)"
+        >
+          X<sup style={{ fontSize: "0.6em" }}>2</sup>
+        </ToolbarBtn>
+
+        <Sep />
+
         {/* Linea orizzontale */}
         <ToolbarBtn
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
@@ -559,19 +572,17 @@ export default function SimpleEditor({
         .tiptap ul { padding-left: 1.5rem; margin: 0 0 0.75rem; list-style: disc; }
         .tiptap hr { border: none; border-top: 1px solid var(--color-border, #e2e8f0); margin: 1.5rem 0; }
 
-        /* ── Immagini: full-width, rounded, nessuna maniglia ── */
+        /* ── Immagini nell'editor: compatte per facilitare la selezione/cancellazione ── */
         .tiptap img {
           display: block;
-          width: 100%;
-          height: auto;
+          max-height: 350px;
+          width: auto;
           border-radius: 0.5rem;
-          margin: 2rem 0;
+          margin: 2rem auto;
           box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-          object-fit: cover;
+          object-fit: contain;
           /* Disabilita il resize handle nativo del browser */
           resize: none;
-          pointer-events: none;
-          user-select: none;
         }
         /* Rimuove qualsiasi widget di selezione/resize di Tiptap */
         .tiptap .ProseMirror-selectednode img,

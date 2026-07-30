@@ -222,17 +222,17 @@ a:hover {
 /* ── Tipografia articolo ────────────────────────────────────────────────── */
 .prose-latin {
   font-family: var(--font-serif);
-  font-size: 1rem;        /* mobile */
+  font-size: 1.05rem;      /* mobile — leggibilità aumentata */
   line-height: 1.9;
   color: var(--color-ink);
 }
 
 @media (min-width: 640px) {
-  .prose-latin { font-size: 1.05rem; }
+  .prose-latin { font-size: 1.1rem; }
 }
 
 @media (min-width: 1024px) {
-  .prose-latin { font-size: 1.1rem; }
+  .prose-latin { font-size: 1.15rem; }
 }
 
 .prose-latin p      { margin: 0 0 1rem; }
