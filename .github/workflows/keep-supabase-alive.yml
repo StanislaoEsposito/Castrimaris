@@ -1,0 +1,16 @@
+﻿name: Keep Supabase Alive
+
+on:
+  schedule:
+    - cron: '0 12 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Esegui query per mantenere attivo il DB
+        run: |
+          curl -X GET 'https://hllrnreounstieswiget.supabase.co/rest/v1/translations?select=*&limit=1' \
+          -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
